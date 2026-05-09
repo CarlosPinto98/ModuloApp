@@ -1,0 +1,70 @@
+name: modulo_Transferencias
+description: "App propuesta 2026"
+publish_to: 'none'
+version: 1.0.0+00
+
+server.address=0:0:0:0:
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  animations: ^2.1.0
+  lottie: ^3.3.2
+  flutter_svg: ^2.2.1
+
+  # Navegación y Estado
+  go_router: ^16.2.5
+  flutter_riverpod: ^2.5.1
+  provider: ^6.1.2  # Agregado para soportar tus Singletons con ChangeNotifier
+
+  # Networking (Usas http en tus archivos de servicio)
+  http: ^1.2.2
+  dio: ^5.9.0
+  http_parser: ^4.1.2
+  shared_preferences: ^2.3.3
+
+  # Utilidades
+  intl: ^0.19.0
+  email_validator: ^2.1.17
+  equatable: ^2.0.7
+  cached_network_image: ^3.3.1
+
+  # UI Components
+  top_snackbar_flutter: ^3.3.0
+  smooth_page_indicator: ^1.2.1
+  sticky_headers: ^0.3.0+2
+
+  # Multimedia y Archivos
+  image_picker: ^1.2.0
+  mime: ^2.0.0
+  meta: ^1.16.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/images/logo.png"
+
+flutter:
+  uses-material-design: true
+
+  # ── SECCIÓN DE ASSETS AGREGADA ──────────────────────────────
+  # Esto es obligatorio para que tus imágenes y lotties funcionen
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/icons/
+  # ────────────────────────────────────────────────────────────
