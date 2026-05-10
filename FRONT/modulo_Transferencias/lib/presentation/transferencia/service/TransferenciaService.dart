@@ -11,7 +11,7 @@ import '../model/TransferenciaModels.dart';
 
 // ── CONFIGURACIÓN DE URL ─────────────────────────────────────────────────
 // Usa la IP de tu PC donde corre el backend
-const String baseUrl = 'http://192.168.1.3:8080/api';
+const String baseUrl = 'http://192.168.1.5:8080/api';
 const String authUrl = 'https://mriai.coreunimag.com/api/auth';
 
 // ── HEADERS ───────────────────────────────────────────────────────────────

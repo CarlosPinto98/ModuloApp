@@ -145,7 +145,7 @@ class MovimientosScreenState extends State<MovimientosScreen>
             ),
             const SizedBox(height: 28),
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               child: GestureDetector(
                 onTap: () => Navigator.pop(context),
                 child: Container(
