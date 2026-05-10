@@ -5,13 +5,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'model/TransferenciaModels.dart';
-import 'service/HistorialService.dart';
-import 'service/TransferenciaService.dart';
-import 'service/SaldoService.dart';
-import 'model/MovimientoItem.dart';
-import 'widgets/Resultado.dart';
-import 'widgets/MilesFormatter.dart';
+import '../model/TransferenciaModels.dart';
+import '../service/HistorialService.dart';
+import '../service/TransferenciaService.dart';
+import '../service/SaldoService.dart';
+import '../model/MovimientoItem.dart';
+import '../widgets/Resultado.dart';
+import '../widgets/MilesFormatter.dart';
 
 class TransferenciaScreen extends StatefulWidget {
   final VoidCallback? onGoHome;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:modulo_Transferencias/presentation/transferencia/MainScreen.dart';
+import 'package:modulo_Transferencias/presentation/transferencia/view/MainScreen.dart';
 
 
 void main() {

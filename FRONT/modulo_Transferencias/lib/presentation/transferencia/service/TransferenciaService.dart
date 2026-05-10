@@ -161,4 +161,20 @@ class TransferenciaService {
       return {'exito': false, 'mensaje': 'Error de conexión'};
     }
   }
+
+  // ── ACTUALIZAR NÚMERO DE CUENTA ────────────────────────────────────────
+  static Future<Map<String, dynamic>> actualizarNumeroCuenta(String nuevaCuenta) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/usuario/cuenta'),
+        headers: await headersAsync(),
+        body: jsonEncode({'numeroCuenta': nuevaCuenta}),
+      ).timeout(const Duration(seconds: 15));
+
+      return jsonDecode(response.body);
+    } catch (_) {
+      return {'exito': false, 'mensaje': 'Error de conexión'};
+    }
+  }
+
 }

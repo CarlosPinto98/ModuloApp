@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'model/MovimientoItem.dart';
-import 'service/HistorialService.dart';
+import '../model/MovimientoItem.dart';
+import '../service/HistorialService.dart';
 
 class MovimientosScreen extends StatefulWidget {
   final VoidCallback? onGoHome;

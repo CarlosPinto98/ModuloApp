@@ -3,18 +3,18 @@
 //  Pantalla principal con navbar, saldo y recarga.
 // ============================================================
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'TransferenciaScreen.dart';
 import 'MovimientosScreen.dart';
-import 'service/HistorialService.dart';
-import 'service/SaldoService.dart';
-import 'service/TransferenciaService.dart';
-import 'service/TokenStore.dart';
-import 'widgets/HomeContent.dart';
-import 'widgets/NotificacionesContent.dart';
-import 'widgets/PerfilContent.dart';
-import 'dart:async';
+import '../service/HistorialService.dart';
+import '../service/SaldoService.dart';
+import '../service/TransferenciaService.dart';
+import '../service/TokenStore.dart';
+import '../widgets/HomeContent.dart';
+import '../widgets/NotificacionesContent.dart';
+import '../widgets/PerfilContent.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -62,7 +62,7 @@ class MainScreenState extends State<MainScreen>
       // ── Refresco automático cada 15 segundos ──────────────────────
       refreshTimer = Timer.periodic(const Duration(seconds: 15), (_) {
         SaldoService.instancia.sincronizarConBackend();
-        HistorialService.instancia.cargarHoyDesdeBackend();
+        HistorialService.instancia.refrescarHoySilencioso();
       });
     });
 
@@ -75,9 +75,9 @@ class MainScreenState extends State<MainScreen>
     ];
   }
 
-
   @override
   void dispose() {
+    refreshTimer?.cancel();
     animController.dispose();
     super.dispose();
   }

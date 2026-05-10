@@ -23,8 +23,7 @@ class TokenStore {
   // Token del microservicio externo para desarrollo/pruebas.
   // El módulo de Auth lo reemplazará con el token real en producción.
   static const String? tokenPrueba =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwZW5kaWVudGVfMTc3NzU1ODg1Njk1NEB0bXAuY29tIiwiZXNFbXByZXNhIjpmYWxzZSwicm9sZXMiOlsiUGFkcmUiXSwibm9tYnJlcyI6IkNhcmxvcyIsImFwZWxsaWRvcyI6IlBpbnRvIiwidXVpZEFjY2VzbyI6ImI2YTIxMGFjLTkzMzAtNDJjYi05ZmZhLTE1NDRhNDgwY2MyNCIsImV4cGlyYUVuIjoxNzc4Mzg2ODczMjExLCJpYXQiOjE3NzgzMDA0NzMsImV4cCI6MTc3ODM4Njg3M30.7Rs81o_NJcm_j7Nk9qGzTWo5ZY_cl98C96v0qvEUvrE';
-
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwZW5kaWVudGVfMTc3NzU1ODg1Njk1NEB0bXAuY29tIiwiZXNFbXByZXNhIjpmYWxzZSwicm9sZXMiOlsiUGFkcmUiXSwibm9tYnJlcyI6IkNhcmxvcyIsImFwZWxsaWRvcyI6IlBpbnRvIiwidXVpZEFjY2VzbyI6ImY2NjdjNDdjLWY4MDEtNGI2Yy1iMzYyLWQ5MDQwYzU4NDc1ZCIsImV4cGlyYUVuIjoxNzc4NDY2NDQ4NDYzLCJpYXQiOjE3NzgzODAwNDgsImV4cCI6MTc3ODQ2NjQ0OH0.3bv4Qgh-MNzKTMeZDW-qJwnMI0-YK2RUIAy42FLVcfw';
   // Carga el tokenApp y el jwtPropio desde SharedPreferences al iniciar la app
   static Future<void> cargarDesdePrefs() async {
     if (token != null) return;

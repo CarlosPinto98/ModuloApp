@@ -58,6 +58,30 @@ class HistorialService extends ChangeNotifier {
     }
   }
 
+  // ── REFRESCO SILENCIOSO (sin mostrar loading — para el timer) ──────
+  Future<void> refrescarHoySilencioso() async {
+    try {
+      final resultado = await TransferenciaService.obtenerMovimientosHoy();
+      movimientos.removeWhere((m) => m.esHoy);
+      movimientos.insertAll(
+        0,
+        resultado.map((m) => MovimientoItem(
+          referencia:    m.referencia,
+          cuentaDestino: m.cuentaDestino,
+          monto:         formatearMonto(m.monto),
+          concepto:      m.concepto,
+          fechaHora:     m.fechaHora,
+          estado:        m.estado,
+          tipo:          m.tipo,
+          esHoy:         m.esHoy,
+        )),
+      );
+      notifyListeners();
+    } catch (_) {
+      // si falla silenciosamente, no muestra error ni parpadeo
+    }
+  }
+
   // ── CARGAR SOLO LOS DE HOY ──────────────────────────────────────────
   Future<void> cargarHoyDesdeBackend() async {
     cargandoInterno = true;

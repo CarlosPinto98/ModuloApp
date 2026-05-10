@@ -25,7 +25,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthFilter            jwtAuthFilter;
+    private final JwtAuthFilter jwtAuthFilter;
     // ✅ Ahora inyecta CustomUserDetailsService en lugar de definir el Bean aquí
     private final com.unimag.modulo_transferencia.security.CustomUserDetailsService customUserDetailsService;
 
