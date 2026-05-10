@@ -139,62 +139,62 @@ class RecargaState extends State<Recarga> {
                     ),
                     const SizedBox(height: 16),
 
-                    // ── Mi número de cuenta (solo lectura) ─────────────
-                    if (esPropia)
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 200),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            color: const Color(0xFF00D4AA).withOpacity(0.08),
-                            border: Border.all(color: const Color(0xFF00D4AA).withOpacity(0.3)),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                Text('Mi número de cuenta',
-                                    style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.w500)),
-                                const SizedBox(height: 4),
-                                Text(widget.miCuenta,
-                                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
-                              ]),
-                              GestureDetector(
-                                onTap: () {
-                                  Clipboard.setData(ClipboardData(text: widget.miCuenta));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Row(children: [
-                                        Icon(Icons.copy_rounded, color: Color(0xFF00D4AA), size: 16),
-                                        SizedBox(width: 8),
-                                        Text('Número copiado', style: TextStyle(color: Colors.white)),
-                                      ]),
-                                      backgroundColor: const Color(0xFF13131A),
-                                      behavior: SnackBarBehavior.floating,
-                                      duration: const Duration(seconds: 2),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(8),
-                                    color: const Color(0xFF00D4AA).withOpacity(0.15),
-                                  ),
-                                  child: const Row(children: [
-                                    Icon(Icons.copy_rounded, color: Color(0xFF00D4AA), size: 14),
-                                    SizedBox(width: 4),
-                                    Text('Copiar', style: TextStyle(color: Color(0xFF00D4AA), fontSize: 12, fontWeight: FontWeight.w600)),
-                                  ]),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    // // ── Mi número de cuenta (solo lectura) ─────────────
+                    // if (esPropia)
+                    //   AnimatedSize(
+                    //     duration: const Duration(milliseconds: 200),
+                    //     child: Container(
+                    //       width: double.infinity,
+                    //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    //       decoration: BoxDecoration(
+                    //         borderRadius: BorderRadius.circular(12),
+                    //         color: const Color(0xFF00D4AA).withOpacity(0.08),
+                    //         border: Border.all(color: const Color(0xFF00D4AA).withOpacity(0.3)),
+                    //       ),
+                    //       child: Row(
+                    //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //         children: [
+                    //           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    //             Text('Mi número de cuenta',
+                    //                 style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, fontWeight: FontWeight.w500)),
+                    //             const SizedBox(height: 4),
+                    //             Text(widget.miCuenta,
+                    //                 style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
+                    //           ]),
+                    //           GestureDetector(
+                    //             onTap: () {
+                    //               Clipboard.setData(ClipboardData(text: widget.miCuenta));
+                    //               ScaffoldMessenger.of(context).showSnackBar(
+                    //                 SnackBar(
+                    //                   content: const Row(children: [
+                    //                     Icon(Icons.copy_rounded, color: Color(0xFF00D4AA), size: 16),
+                    //                     SizedBox(width: 8),
+                    //                     Text('Número copiado', style: TextStyle(color: Colors.white)),
+                    //                   ]),
+                    //                   backgroundColor: const Color(0xFF13131A),
+                    //                   behavior: SnackBarBehavior.floating,
+                    //                   duration: const Duration(seconds: 2),
+                    //                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    //                 ),
+                    //               );
+                    //             },
+                    //             child: Container(
+                    //               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    //               decoration: BoxDecoration(
+                    //                 borderRadius: BorderRadius.circular(8),
+                    //                 color: const Color(0xFF00D4AA).withOpacity(0.15),
+                    //               ),
+                    //               child: const Row(children: [
+                    //                 Icon(Icons.copy_rounded, color: Color(0xFF00D4AA), size: 14),
+                    //                 SizedBox(width: 4),
+                    //                 Text('Copiar', style: TextStyle(color: Color(0xFF00D4AA), fontSize: 12, fontWeight: FontWeight.w600)),
+                    //               ]),
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     ),
+                    //   ),const SizedBox(height: 16)
 
                     // ── Campo cuenta destino (solo si es a otro) ────────
                     if (!esPropia)
@@ -335,7 +335,7 @@ class RecargaState extends State<Recarga> {
 
               // ── Botón confirmar (fijo abajo) ────────────────────────
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                 child: GestureDetector(
                   onTap: isLoading ? null : confirmar,
                   child: AnimatedContainer(

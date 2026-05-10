@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../service/TransferenciaService.dart';
 import '../service/SaldoService.dart';
+import '../service/TokenStore.dart';
 
 class PerfilContent extends StatefulWidget {
   const PerfilContent({super.key});
@@ -169,15 +170,31 @@ class PerfilContentState extends State<PerfilContent> {
           // ── Avatar ────────────────────────────────────────────────────
           const SizedBox(height: 16),
           Center(
-            child: Container(
-              width: 88, height: 88,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                    colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
-              ),
-              child: const Icon(Icons.person_outline_rounded,
-                  color: Colors.white, size: 44),
+            child: Column(
+              children: [
+                Container(
+                  width: 88, height: 88,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                        colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
+                  ),
+                  child: const Icon(Icons.person_outline_rounded,
+                      color: Colors.white, size: 44),
+                ),
+                const SizedBox(height: 14),
+                ListenableBuilder(
+                  listenable: SaldoService.instancia,
+                  builder: (_, __) => Text(
+                    '${TokenStore.nombre} ${TokenStore.apellido}'.trim(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3),
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 32),
@@ -203,6 +220,40 @@ class PerfilContentState extends State<PerfilContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
+                // ── Saldo disponible ────────────────────────────────────
+                ListenableBuilder(
+                  listenable: SaldoService.instancia,
+                  builder: (_, __) {
+                    final saldo = SaldoService.instancia.saldo;
+                    final saldoFmt = saldo
+                        .toStringAsFixed(2)
+                        .replaceAllMapped(
+                        RegExp(r'(\d{1,3})(?=(\d{3})+(?=\.))'),
+                            (m) => '${m[1]},');
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Saldo disponible',
+                            style: TextStyle(
+                                color: Colors.white.withOpacity(0.45),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 6),
+                        Text('\$$saldoFmt',
+                            style: const TextStyle(
+                                color: Color(0xFF00D4AA),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800)),
+                      ],
+                    );
+                  },
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Divider(color: Colors.white.withOpacity(0.07), height: 1),
+                ),
+
                 // ── Número de cuenta ────────────────────────────────────
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -226,7 +277,6 @@ class PerfilContentState extends State<PerfilContent> {
                     ),
                     Row(
                       children: [
-                        // Botón copiar
                         GestureDetector(
                           onTap: () {
                             Clipboard.setData(ClipboardData(text: numeroCuenta));
@@ -250,7 +300,6 @@ class PerfilContentState extends State<PerfilContent> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // Botón editar
                         GestureDetector(
                           onTap: mostrarDialogEditar,
                           child: Container(
@@ -280,34 +329,29 @@ class PerfilContentState extends State<PerfilContent> {
                   child: Divider(color: Colors.white.withOpacity(0.07), height: 1),
                 ),
 
-                // ── Saldo actual ────────────────────────────────────────
+                // ── Correo electrónico ──────────────────────────────────
                 ListenableBuilder(
                   listenable: SaldoService.instancia,
-                  builder: (_, __) {
-                    final saldo = SaldoService.instancia.saldo;
-                    final saldoFmt = saldo
-                        .toStringAsFixed(2)
-                        .replaceAllMapped(
-                        RegExp(r'(\d{1,3})(?=(\d{3})+(?=\.))'),
-                            (m) => '${m[1]},');
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Saldo disponible',
-                            style: TextStyle(
-                                color: Colors.white.withOpacity(0.45),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 6),
-                        Text('\$$saldoFmt',
-                            style: const TextStyle(
-                                color: Color(0xFF00D4AA),
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800)),
-                      ],
-                    );
-                  },
+                  builder: (_, __) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Correo electrónico',
+                          style: TextStyle(
+                              color: Colors.white.withOpacity(0.45),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500)),
+                      const SizedBox(height: 6),
+                      Text(
+                        TokenStore.email,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
+
               ],
             ),
           ),

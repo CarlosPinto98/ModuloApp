@@ -10,6 +10,10 @@ class TokenStore {
   static String? jwtPropio;  // JWT propio del backend Spring Boot
   static int?    expiraEn;
 
+  static String nombre   = 'Usuario';
+  static String apellido = '';
+  static String email    = '';
+
   static const List<String> claves = [
     'tokenApp',
     'token',

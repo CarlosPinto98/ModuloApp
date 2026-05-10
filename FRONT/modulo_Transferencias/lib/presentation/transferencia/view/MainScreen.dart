@@ -54,6 +54,9 @@ class MainScreenState extends State<MainScreen>
       final loginData = await TransferenciaService.loginConTokenExterno();
       if (loginData != null) {
         SaldoService.instancia.setSaldo(loginData.saldo);
+        TokenStore.nombre   = loginData.nombre;
+        TokenStore.apellido = loginData.apellido;
+        TokenStore.email    = loginData.email;
       } else {
         SaldoService.instancia.sincronizarConBackend();
       }
@@ -141,12 +144,23 @@ class MainScreenState extends State<MainScreen>
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Buen día 👋',
-                                style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 14)),
-                            const SizedBox(height: 2),
-                            const Text('Bienvenido',
-                                style: TextStyle(color: Colors.white, fontSize: 24,
-                                    fontWeight: FontWeight.w800, letterSpacing: -0.3)),
+
+                            ListenableBuilder(
+                              listenable: SaldoService.instancia,
+                              builder: (_, __) => Text(
+                                '${TokenStore.nombre} ${TokenStore.apellido}'.trim(),
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 24,
+                                    fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                              ),
+                            ),
+
+                            // Text('Buen día 👋',
+                            //     style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 14)),
+                            // const SizedBox(height: 2),
+                            // const Text('Bienvenido',
+                            //     style: TextStyle(color: Colors.white, fontSize: 24,
+                            //         fontWeight: FontWeight.w800, letterSpacing: -0.3)),
                           ],
                         ),
                         Row(
