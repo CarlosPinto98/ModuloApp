@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../service/TransferenciaService.dart';
 import '../service/SaldoService.dart';
 import '../service/TokenStore.dart';
+import 'dart:convert';
 
 class PerfilContent extends StatefulWidget {
   const PerfilContent({super.key});
@@ -18,7 +19,9 @@ class PerfilContent extends StatefulWidget {
 
 class PerfilContentState extends State<PerfilContent> {
   // TODO: reemplazar con los datos reales que vengan del módulo Auth
-  String numeroCuenta = '0012345678';
+  String get numeroCuenta => TokenStore.numeroCuenta.isNotEmpty
+      ? TokenStore.numeroCuenta
+      : '—';
   bool guardando = false;
 
   void mostrarDialogEditar() {
@@ -109,7 +112,7 @@ class PerfilContentState extends State<PerfilContent> {
                 Navigator.pop(ctx);
 
                 if (res['exito'] == true) {
-                  setState(() => numeroCuenta = cuentaCtrl.text.trim());
+                  setState(() => TokenStore.numeroCuenta = cuentaCtrl.text.trim());
                   mostrarSnack('Número de cuenta actualizado', error: false);
                 } else {
                   mostrarSnack(res['mensaje'] ?? 'Error al actualizar', error: true);
@@ -172,16 +175,45 @@ class PerfilContentState extends State<PerfilContent> {
           Center(
             child: Column(
               children: [
-                Container(
-                  width: 88, height: 88,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                        colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
-                  ),
-                  child: const Icon(Icons.person_outline_rounded,
-                      color: Colors.white, size: 44),
+                ListenableBuilder(
+                  listenable: SaldoService.instancia,
+                  builder: (_, __) {
+                    final tieneFoto = TokenStore.fotoApp.isNotEmpty;
+                    return Container(
+                      width: 88, height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: tieneFoto ? null : const LinearGradient(
+                            colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
+                      ),
+                      child: tieneFoto
+                          ? ClipOval(
+                        child: Image.memory(
+                          base64Decode(TokenStore.fotoApp),
+                          fit: BoxFit.cover,
+                          width: 88, height: 88,
+                        ),
+                      )
+                          : const Icon(Icons.person_outline_rounded,
+                          color: Colors.white, size: 44),
+                    );
+                  },
                 ),
+                // // ── Avatar ────────────────────────────────────────────────────
+                // const SizedBox(height: 16),
+                // Center(
+                //   child: Column(
+                //     children: [
+                //       Container(
+                //         width: 88, height: 88,
+                //         decoration: const BoxDecoration(
+                //           shape: BoxShape.circle,
+                //           gradient: LinearGradient(
+                //               colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
+                //         ),
+                //         child: const Icon(Icons.person_outline_rounded,
+                //             color: Colors.white, size: 44),
+                //       ),
                 const SizedBox(height: 14),
                 ListenableBuilder(
                   listenable: SaldoService.instancia,

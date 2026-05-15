@@ -1,4 +1,4 @@
-package com.unimag.modulo_transferencia.model;
+package com.unimag.modulo_transferencia.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

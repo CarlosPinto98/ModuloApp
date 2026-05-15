@@ -51,12 +51,18 @@ class MainScreenState extends State<MainScreen>
     animController.forward();
 
     TokenStore.cargarDesdePrefs().then((_) async {
+      // ── Extraer foto del token externo ────────────────────────────
+      if (TokenStore.token != null) {
+        TokenStore.extraerDatosToken(TokenStore.token!);
+      }
       final loginData = await TransferenciaService.loginConTokenExterno();
       if (loginData != null) {
         SaldoService.instancia.setSaldo(loginData.saldo);
-        TokenStore.nombre   = loginData.nombre;
-        TokenStore.apellido = loginData.apellido;
-        TokenStore.email    = loginData.email;
+        TokenStore.nombre        = loginData.nombre;
+        TokenStore.apellido      = loginData.apellido;
+        TokenStore.email         = loginData.email;
+        TokenStore.numeroCuenta  = loginData.numeroCuenta;
+        setState(() {});
       } else {
         SaldoService.instancia.sincronizarConBackend();
       }
@@ -107,7 +113,8 @@ class MainScreenState extends State<MainScreen>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
-                gradient: const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
+                gradient: const LinearGradient(
+                    colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)]),
               ),
               child: const Text('Salir',
                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
@@ -134,6 +141,7 @@ class MainScreenState extends State<MainScreen>
           child: SafeArea(
             child: Column(
               children: [
+
                 // ── HEADER (solo visible en Inicio) ──────────────────
                 if (selectedIndex == 0)
                   Padding(
@@ -141,28 +149,38 @@ class MainScreenState extends State<MainScreen>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
 
-                            ListenableBuilder(
-                              listenable: SaldoService.instancia,
-                              builder: (_, __) => Text(
-                                '${TokenStore.nombre} ${TokenStore.apellido}'.trim(),
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 24,
-                                    fontWeight: FontWeight.w800, letterSpacing: -0.3),
+                        // ── Saludo + Nombre ───────────────────────────
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Buen día 👋',
+                                style: TextStyle(
+                                    color: Colors.white.withOpacity(0.45),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500),
                               ),
-                            ),
-
-                            // Text('Buen día 👋',
-                            //     style: TextStyle(color: Colors.white.withOpacity(0.45), fontSize: 14)),
-                            // const SizedBox(height: 2),
-                            // const Text('Bienvenido',
-                            //     style: TextStyle(color: Colors.white, fontSize: 24,
-                            //         fontWeight: FontWeight.w800, letterSpacing: -0.3)),
-                          ],
+                              const SizedBox(height: 2),
+                              ListenableBuilder(
+                                listenable: SaldoService.instancia,
+                                builder: (_, __) => Text(
+                                  '${TokenStore.nombre} ${TokenStore.apellido}'.trim(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.3),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+
+                        // ── Botones notificación y logout ─────────────
                         Row(
                           children: [
                             Container(
@@ -170,9 +188,11 @@ class MainScreenState extends State<MainScreen>
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 color: Colors.white.withOpacity(0.06),
-                                border: Border.all(color: Colors.white.withOpacity(0.1)),
+                                border: Border.all(
+                                    color: Colors.white.withOpacity(0.1)),
                               ),
-                              child: const Icon(Icons.notifications_outlined, color: Colors.white70, size: 20),
+                              child: const Icon(Icons.notifications_outlined,
+                                  color: Colors.white70, size: 20),
                             ),
                             const SizedBox(width: 10),
                             GestureDetector(
@@ -183,10 +203,12 @@ class MainScreenState extends State<MainScreen>
                                   borderRadius: BorderRadius.circular(12),
                                   gradient: const LinearGradient(
                                     colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)],
-                                    begin: Alignment.topLeft, end: Alignment.bottomRight,
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
                                 ),
-                                child: const Icon(Icons.logout_rounded, color: Colors.white, size: 20),
+                                child: const Icon(Icons.logout_rounded,
+                                    color: Colors.white, size: 20),
                               ),
                             ),
                           ],
@@ -219,17 +241,22 @@ class MainScreenState extends State<MainScreen>
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 250),
                             margin: const EdgeInsets.symmetric(horizontal: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
                               gradient: isSelected
-                                  ? const LinearGradient(colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)])
+                                  ? const LinearGradient(
+                                  colors: [Color(0xFF6C63FF), Color(0xFF00D4AA)])
                                   : null,
                             ),
                             child: Row(
                               children: [
                                 Icon(menuItems[i]['icon'] as IconData,
-                                    color: isSelected ? Colors.white : Colors.white38, size: 20),
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white38,
+                                    size: 20),
                                 AnimatedSize(
                                   duration: const Duration(milliseconds: 250),
                                   curve: Curves.easeOut,
@@ -237,7 +264,10 @@ class MainScreenState extends State<MainScreen>
                                       ? Row(children: [
                                     const SizedBox(width: 6),
                                     Text(menuItems[i]['label'] as String,
-                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700)),
                                   ])
                                       : const SizedBox.shrink(),
                                 ),

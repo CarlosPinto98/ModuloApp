@@ -1,7 +1,7 @@
 package com.unimag.modulo_transferencia.repository;
 
-import com.unimag.modulo_transferencia.model.Movimiento;
-import com.unimag.modulo_transferencia.model.Usuario;
+import com.unimag.modulo_transferencia.entity.Movimiento;
+import com.unimag.modulo_transferencia.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

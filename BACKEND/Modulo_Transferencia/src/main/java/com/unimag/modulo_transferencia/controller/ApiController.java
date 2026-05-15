@@ -1,10 +1,11 @@
 package com.unimag.modulo_transferencia.controller;
 
-import com.unimag.modulo_transferencia.model.Movimiento;
-import com.unimag.modulo_transferencia.model.Usuario;
+import com.unimag.modulo_transferencia.entity.Cuenta;
+import com.unimag.modulo_transferencia.entity.Movimiento;
+import com.unimag.modulo_transferencia.entity.Usuario;
+import com.unimag.modulo_transferencia.repository.CuentaRepository;
 import com.unimag.modulo_transferencia.repository.UsuarioRepository;
 import com.unimag.modulo_transferencia.service.TransferenciaService;
-import jakarta.validation.constraints.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,7 +24,8 @@ import java.util.stream.Collectors;
 @CrossOrigin(origins = "*", allowedHeaders = "*")
 public class ApiController {
 
-    private final UsuarioRepository usuarioRepository;
+    private final UsuarioRepository    usuarioRepository;
+    private final CuentaRepository     cuentaRepository;
     private final TransferenciaService transferenciaService;
 
     // ── Obtener usuario autenticado ───────────────────────────────────────
@@ -32,16 +34,23 @@ public class ApiController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
+    // ── Obtener cuenta del usuario autenticado ────────────────────────────
+    private Cuenta getCuenta(Usuario usuario) {
+        return cuentaRepository.findByUsuario(usuario)
+                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+    }
+
     // ── PERFIL ────────────────────────────────────────────────────────────
     @GetMapping("/usuario/perfil")
     public ResponseEntity<Map<String, Object>> perfil(Authentication auth) {
         Usuario u = getUsuario(auth);
+        Cuenta  c = getCuenta(u);
         Map<String, Object> resp = new HashMap<>();
-        resp.put("numeroCuenta", u.getNumeroCuenta());
+        resp.put("numeroCuenta", c.getNumeroCuenta());
         resp.put("nombre",       u.getNombre());
         resp.put("apellido",     u.getApellido());
         resp.put("email",        u.getEmail());
-        resp.put("saldo",        u.getSaldo());
+        resp.put("saldo",        c.getSaldo());
         return ResponseEntity.ok(resp);
     }
 
@@ -49,8 +58,9 @@ public class ApiController {
     @GetMapping("/usuario/saldo")
     public ResponseEntity<Map<String, Object>> saldo(Authentication auth) {
         Usuario u = getUsuario(auth);
+        Cuenta  c = getCuenta(u);
         Map<String, Object> resp = new HashMap<>();
-        resp.put("saldo", u.getSaldo());
+        resp.put("saldo", c.getSaldo());
         return ResponseEntity.ok(resp);
     }
 
@@ -93,7 +103,6 @@ public class ApiController {
     }
 
     // ── Mapea movimientos a formato que espera Flutter ────────────────────
-    // FIX: reemplazado Map.of() por HashMap para evitar error de tipos genéricos
     private List<Map<String, Object>> mapearMovimientos(List<Movimiento> movimientos) {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         LocalDateTime inicioDia = LocalDateTime.now().toLocalDate().atStartOfDay();

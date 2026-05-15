@@ -1,7 +1,9 @@
 package com.unimag.modulo_transferencia.scheduler;
 
-import com.unimag.modulo_transferencia.model.Movimiento;
-import com.unimag.modulo_transferencia.model.Usuario;
+import com.unimag.modulo_transferencia.entity.Cuenta;
+import com.unimag.modulo_transferencia.entity.Movimiento;
+import com.unimag.modulo_transferencia.entity.Usuario;
+import com.unimag.modulo_transferencia.repository.CuentaRepository;
 import com.unimag.modulo_transferencia.repository.MovimientoRepository;
 import com.unimag.modulo_transferencia.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -21,11 +22,8 @@ public class Pendiente {
 
     private final MovimientoRepository movimientoRepository;
     private final UsuarioRepository    usuarioRepository;
+    private final CuentaRepository     cuentaRepository;
 
-    // ── Ejecuta cada 60 segundos ──────────────────────────────────────────
-    // Revisa movimientos PENDIENTE de más de 5 minutos:
-    // - Si la cuenta destino ya existe → COMPLETADO y acredita el saldo
-    // - Si la cuenta destino sigue sin existir → FALLIDO y devuelve el saldo
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void resolverPendientes() {
@@ -40,23 +38,31 @@ public class Pendiente {
         log.info("Resolviendo {} movimiento(s) pendiente(s)...", pendientes.size());
 
         for (Movimiento mov : pendientes) {
-            boolean cuentaExiste = usuarioRepository
+            boolean cuentaExiste = cuentaRepository
                     .findByNumeroCuenta(mov.getCuentaDestino()).isPresent();
 
             if (cuentaExiste) {
                 // Acreditar al destino y marcar COMPLETADO
-                usuarioRepository.findByNumeroCuenta(mov.getCuentaDestino())
-                        .ifPresent(destino -> {
-                            destino.setSaldo(destino.getSaldo() + mov.getMonto());
-                            usuarioRepository.save(destino);
+                cuentaRepository.findByNumeroCuenta(mov.getCuentaDestino())
+                        .ifPresent(cuentaDestino -> {
+                            cuentaDestino.setSaldo(cuentaDestino.getSaldo() + mov.getMonto());
+                            cuentaRepository.save(cuentaDestino);
                         });
+
                 mov.setEstado(Movimiento.EstadoMovimiento.COMPLETADO);
                 log.info("Movimiento {} → COMPLETADO", mov.getReferencia());
+
             } else {
                 // Devolver saldo al origen y marcar FALLIDO
                 Usuario origen = mov.getUsuarioOrigen();
-                origen.setSaldo(origen.getSaldo() + mov.getMonto());
-                usuarioRepository.save(origen);
+                Cuenta cuentaOrigen = cuentaRepository.findByUsuario(origen)
+                        .orElseThrow(() -> new RuntimeException(
+                                "Cuenta de origen no encontrada para movimiento: "
+                                        + mov.getReferencia()));
+
+                cuentaOrigen.setSaldo(cuentaOrigen.getSaldo() + mov.getMonto());
+                cuentaRepository.save(cuentaOrigen);
+
                 mov.setEstado(Movimiento.EstadoMovimiento.FALLIDO);
                 log.info("Movimiento {} → FALLIDO (cuenta destino no encontrada, saldo devuelto)",
                         mov.getReferencia());

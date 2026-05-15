@@ -4,15 +4,19 @@
 // ============================================================
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class TokenStore {
+
   static String? token;      // tokenApp del microservicio externo
   static String? jwtPropio;  // JWT propio del backend Spring Boot
   static int?    expiraEn;
 
-  static String nombre   = 'Usuario';
-  static String apellido = '';
-  static String email    = '';
+  static String nombre        = 'Usuario';
+  static String apellido      = '';
+  static String email         = '';
+  static String fotoApp       = '';
+  static String numeroCuenta  = '';
 
   static const List<String> claves = [
     'tokenApp',
@@ -27,7 +31,9 @@ class TokenStore {
   // Token del microservicio externo para desarrollo/pruebas.
   // El módulo de Auth lo reemplazará con el token real en producción.
   static const String? tokenPrueba =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwZW5kaWVudGVfMTc3NzU1ODg1Njk1NEB0bXAuY29tIiwiZXNFbXByZXNhIjpmYWxzZSwicm9sZXMiOlsiUGFkcmUiXSwibm9tYnJlcyI6IkNhcmxvcyIsImFwZWxsaWRvcyI6IlBpbnRvIiwidXVpZEFjY2VzbyI6ImY2NjdjNDdjLWY4MDEtNGI2Yy1iMzYyLWQ5MDQwYzU4NDc1ZCIsImV4cGlyYUVuIjoxNzc4NDY2NDQ4NDYzLCJpYXQiOjE3NzgzODAwNDgsImV4cCI6MTc3ODQ2NjQ0OH0.3bv4Qgh-MNzKTMeZDW-qJwnMI0-YK2RUIAy42FLVcfw';
+
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwZW5kaWVudGVfMTc3NzU1ODg1Njk1NEB0bXAuY29tIiwiZXNFbXByZXNhIjpmYWxzZSwicm9sZXMiOlsiUGFkcmUiXSwibm9tYnJlcyI6IkNhcmxvcyIsImFwZWxsaWRvcyI6IlBpbnRvIiwidXVpZEFjY2VzbyI6IjU4NGE0NWM2LTUyNTUtNGQ4ZC1iNTZjLTdhYjgyMGMxNDM1NSIsImV4cGlyYUVuIjoxNzc4OTA2MTEyMzI1LCJpYXQiOjE3Nzg4MTk3MTIsImV4cCI6MTc3ODkwNjExMn0.sNzZlRsdi9ZsCCDzE21RlHXKgulvjadXC-9XF6nVASw";
+
   // Carga el tokenApp y el jwtPropio desde SharedPreferences al iniciar la app
   static Future<void> cargarDesdePrefs() async {
     if (token != null) return;
@@ -88,4 +94,20 @@ class TokenStore {
 
   static String? getJwtPropio()     => jwtPropio;
   static bool    get tieneJwtPropio => jwtPropio != null;
+
+
+  // Extrae fotoApp del token externo
+  static void extraerDatosToken(String token) {
+    try {
+      final partes = token.split('.');
+      if (partes.length < 2) return;
+      String payload = partes[1];
+      final mod = payload.length % 4;
+      if (mod != 0) payload += '=' * (4 - mod);
+      final decoded = utf8.decode(base64Url.decode(payload));
+      final json = jsonDecode(decoded);
+      fotoApp = json['fotoApp'] ?? '';
+    } catch (_) {}
+  }
+
 }

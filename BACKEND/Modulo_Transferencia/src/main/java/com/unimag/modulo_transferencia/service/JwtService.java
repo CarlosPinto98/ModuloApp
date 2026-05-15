@@ -1,14 +1,14 @@
-package com.unimag.modulo_transferencia.security;
+package com.unimag.modulo_transferencia.service;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
 
-@Component
+@Service
 public class JwtService {
 
     @Value("${jwt.secret}")
