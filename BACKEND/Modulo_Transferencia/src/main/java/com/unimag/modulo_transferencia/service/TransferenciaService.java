@@ -2,7 +2,7 @@ package com.unimag.modulo_transferencia.service;
 
 import com.unimag.modulo_transferencia.entity.Cuenta;
 import com.unimag.modulo_transferencia.entity.Movimiento;
-import com.unimag.modulo_transferencia.entity.Usuario;
+
 import com.unimag.modulo_transferencia.repository.CuentaRepository;
 import com.unimag.modulo_transferencia.repository.MovimientoRepository;
 import com.unimag.modulo_transferencia.repository.UsuarioRepository;
@@ -32,30 +32,20 @@ public class TransferenciaService {
 
     // ── TRANSFERENCIA ─────────────────────────────────────────────────────
     @Transactional
-    public Map<String, Object> realizarTransferencia(Usuario origen, String cuentaDestino,
+    public Map<String, Object> realizarTransferencia(Cuenta cuentaOrigen, String cuentaDestino,
                                                      Double monto, String concepto) {
         Map<String, Object> resultado = new HashMap<>();
         String referencia     = generarReferencia("TRF");
         LocalDateTime ahora   = LocalDateTime.now();
         String conceptoFinal  = concepto != null && !concepto.isBlank() ? concepto : "Transferencia";
 
-        // Obtener cuenta del origen
-        Cuenta cuentaOrigen = cuentaRepository.findByUsuario(origen)
-                .orElseThrow(() -> new RuntimeException("Cuenta de origen no encontrada"));
-
         // Validar saldo insuficiente → FALLIDO
         if (cuentaOrigen.getSaldo() < monto) {
             movimientoRepository.save(Movimiento.builder()
-                    .referencia(referencia)
-                    .usuarioOrigen(origen)
-                    .cuentaDestino(cuentaDestino)
-                    .monto(monto)
-                    .concepto(conceptoFinal)
+                    .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                    .cuentaDestino(cuentaDestino).monto(monto).concepto(conceptoFinal)
                     .tipo(Movimiento.TipoMovimiento.TRANSFERENCIA)
-                    .estado(Movimiento.EstadoMovimiento.FALLIDO)
-                    .fechaHora(ahora)
-                    .build());
-
+                    .estado(Movimiento.EstadoMovimiento.FALLIDO).fechaHora(ahora).build());
             resultado.put("exito", false);
             resultado.put("referencia", referencia);
             resultado.put("mensaje", "Saldo insuficiente");
@@ -66,16 +56,10 @@ public class TransferenciaService {
         // Validar cuenta propia → FALLIDO
         if (cuentaOrigen.getNumeroCuenta().equals(cuentaDestino)) {
             movimientoRepository.save(Movimiento.builder()
-                    .referencia(referencia)
-                    .usuarioOrigen(origen)
-                    .cuentaDestino(cuentaDestino)
-                    .monto(monto)
-                    .concepto(conceptoFinal)
+                    .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                    .cuentaDestino(cuentaDestino).monto(monto).concepto(conceptoFinal)
                     .tipo(Movimiento.TipoMovimiento.TRANSFERENCIA)
-                    .estado(Movimiento.EstadoMovimiento.FALLIDO)
-                    .fechaHora(ahora)
-                    .build());
-
+                    .estado(Movimiento.EstadoMovimiento.FALLIDO).fechaHora(ahora).build());
             resultado.put("exito", false);
             resultado.put("referencia", referencia);
             resultado.put("mensaje", "No puedes transferir a tu propia cuenta");
@@ -90,40 +74,24 @@ public class TransferenciaService {
         boolean cuentaExiste = cuentaRepository.findByNumeroCuenta(cuentaDestino).isPresent();
 
         if (cuentaExiste) {
-            // Acreditar al destino → COMPLETADO
             cuentaRepository.findByNumeroCuenta(cuentaDestino).ifPresent(destino -> {
                 destino.setSaldo(destino.getSaldo() + monto);
                 cuentaRepository.save(destino);
             });
-
             movimientoRepository.save(Movimiento.builder()
-                    .referencia(referencia)
-                    .usuarioOrigen(origen)
-                    .cuentaDestino(cuentaDestino)
-                    .monto(monto)
-                    .concepto(conceptoFinal)
+                    .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                    .cuentaDestino(cuentaDestino).monto(monto).concepto(conceptoFinal)
                     .tipo(Movimiento.TipoMovimiento.TRANSFERENCIA)
-                    .estado(Movimiento.EstadoMovimiento.COMPLETADO)
-                    .fechaHora(ahora)
-                    .build());
-
+                    .estado(Movimiento.EstadoMovimiento.COMPLETADO).fechaHora(ahora).build());
             resultado.put("exito", true);
             resultado.put("referencia", referencia);
             resultado.put("mensaje", "Transferencia procesada correctamente");
-
         } else {
-            // Cuenta no existe → PENDIENTE
             movimientoRepository.save(Movimiento.builder()
-                    .referencia(referencia)
-                    .usuarioOrigen(origen)
-                    .cuentaDestino(cuentaDestino)
-                    .monto(monto)
-                    .concepto(conceptoFinal)
+                    .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                    .cuentaDestino(cuentaDestino).monto(monto).concepto(conceptoFinal)
                     .tipo(Movimiento.TipoMovimiento.TRANSFERENCIA)
-                    .estado(Movimiento.EstadoMovimiento.PENDIENTE)
-                    .fechaHora(ahora)
-                    .build());
-
+                    .estado(Movimiento.EstadoMovimiento.PENDIENTE).fechaHora(ahora).build());
             resultado.put("exito", true);
             resultado.put("referencia", referencia);
             resultado.put("mensaje", "Transferencia en proceso. Se confirmará en los próximos minutos.");
@@ -135,45 +103,34 @@ public class TransferenciaService {
 
     // ── RECARGA ───────────────────────────────────────────────────────────
     @Transactional
-    public Map<String, Object> realizarRecarga(Usuario usuario, Double monto,
+    public Map<String, Object> realizarRecarga(Cuenta cuentaOrigen, Double monto,
                                                String metodoPago, String cuentaDestino) {
         Map<String, Object> resultado = new HashMap<>();
         LocalDateTime ahora   = LocalDateTime.now();
         String referencia     = generarReferencia("REC");
         String concepto       = "Recarga - " + (metodoPago != null ? metodoPago : "App");
 
-        // Obtener cuenta del usuario
-        Cuenta cuentaUsuario = cuentaRepository.findByUsuario(usuario)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
-
         boolean esPropia = cuentaDestino == null ||
-                cuentaDestino.equals(cuentaUsuario.getNumeroCuenta());
+                cuentaDestino.equals(cuentaOrigen.getNumeroCuenta());
 
-        // Validar saldo insuficiente para recarga a otro → FALLIDO
-        if (!esPropia && cuentaUsuario.getSaldo() < monto) {
+        // Validar saldo insuficiente para recarga a otro
+        if (!esPropia && cuentaOrigen.getSaldo() < monto) {
             movimientoRepository.save(Movimiento.builder()
-                    .referencia(referencia)
-                    .usuarioOrigen(usuario)
-                    .cuentaDestino(cuentaDestino)
-                    .monto(monto)
-                    .concepto(concepto)
+                    .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                    .cuentaDestino(cuentaDestino).monto(monto).concepto(concepto)
                     .tipo(Movimiento.TipoMovimiento.RECARGA)
-                    .estado(Movimiento.EstadoMovimiento.FALLIDO)
-                    .fechaHora(ahora)
-                    .build());
-
+                    .estado(Movimiento.EstadoMovimiento.FALLIDO).fechaHora(ahora).build());
             resultado.put("exito", false);
             resultado.put("mensaje", "Saldo insuficiente");
             return resultado;
         }
 
         if (esPropia) {
-            cuentaUsuario.setSaldo(cuentaUsuario.getSaldo() + monto);
-            cuentaRepository.save(cuentaUsuario);
+            cuentaOrigen.setSaldo(cuentaOrigen.getSaldo() + monto);
+            cuentaRepository.save(cuentaOrigen);
         } else {
-            cuentaUsuario.setSaldo(cuentaUsuario.getSaldo() - monto);
-            cuentaRepository.save(cuentaUsuario);
-
+            cuentaOrigen.setSaldo(cuentaOrigen.getSaldo() - monto);
+            cuentaRepository.save(cuentaOrigen);
             cuentaRepository.findByNumeroCuenta(cuentaDestino).ifPresent(destino -> {
                 destino.setSaldo(destino.getSaldo() + monto);
                 cuentaRepository.save(destino);
@@ -181,31 +138,26 @@ public class TransferenciaService {
         }
 
         movimientoRepository.save(Movimiento.builder()
-                .referencia(referencia)
-                .usuarioOrigen(usuario)
-                .cuentaDestino(esPropia ? cuentaUsuario.getNumeroCuenta() : cuentaDestino)
-                .monto(monto)
-                .concepto(concepto)
+                .referencia(referencia).cuentaOrigen(cuentaOrigen)
+                .cuentaDestino(esPropia ? cuentaOrigen.getNumeroCuenta() : cuentaDestino)
+                .monto(monto).concepto(concepto)
                 .tipo(Movimiento.TipoMovimiento.RECARGA)
-                .estado(Movimiento.EstadoMovimiento.COMPLETADO)
-                .fechaHora(ahora)
-                .build());
+                .estado(Movimiento.EstadoMovimiento.COMPLETADO).fechaHora(ahora).build());
 
         resultado.put("exito", true);
         resultado.put("mensaje", "Recarga realizada correctamente");
-        resultado.put("nuevoSaldo", cuentaUsuario.getSaldo());
+        resultado.put("nuevoSaldo", cuentaOrigen.getSaldo());
         return resultado;
     }
 
     // ── HISTORIAL COMPLETO ────────────────────────────────────────────────
-    public List<Movimiento> obtenerTodos(Usuario usuario) {
-        return movimientoRepository.findByUsuarioOrigenOrderByFechaHoraDesc(usuario);
+    public List<Movimiento> obtenerTodos(Cuenta cuenta) {
+        return movimientoRepository.findByCuentaOrigenOrderByFechaHoraDesc(cuenta);
     }
 
     // ── HISTORIAL DE HOY ──────────────────────────────────────────────────
-    public List<Movimiento> obtenerDeHoy(Usuario usuario) {
+    public List<Movimiento> obtenerDeHoy(Cuenta cuenta) {
         LocalDateTime inicioDia = LocalDateTime.now().toLocalDate().atStartOfDay();
-        return movimientoRepository
-                .findByUsuarioOrigenAndFechaHoraAfterOrderByFechaHoraDesc(usuario, inicioDia);
+        return movimientoRepository.findByCuentaOrigenAndFechaHoraAfterOrderByFechaHoraDesc(cuenta, inicioDia);
     }
 }

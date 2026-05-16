@@ -3,57 +3,82 @@
 //  Modelos de datos usados por TransferenciaService.
 // ============================================================
 
-class LoginResponse {
-  final String token;
+// ── Modelo de una cuenta bancaria ─────────────────────────────────────────
+class CuentaInfo {
+  final int    id;
   final String numeroCuenta;
-  final String nombre;
-  final String apellido;
-  final String email;
   final double saldo;
 
-  const LoginResponse({
-    required this.token,
+  const CuentaInfo({
+    required this.id,
     required this.numeroCuenta,
-    required this.nombre,
-    required this.apellido,
-    required this.email,
     required this.saldo,
   });
 
-  factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(
-      token:        json['token']        as String,
+  factory CuentaInfo.fromJson(Map<String, dynamic> json) {
+    return CuentaInfo(
+      id:           (json['id'] as num).toInt(),
       numeroCuenta: json['numeroCuenta'] as String? ?? '',
-      nombre:       json['nombre']       as String? ?? '',
-      apellido:     json['apellido']     as String? ?? '',
-      email:        json['email']        as String? ?? '',
       saldo:        (json['saldo'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
 
+// ── Respuesta del login ────────────────────────────────────────────────────
+class LoginResponse {
+  final String           token;
+  final String           nombre;
+  final String           apellido;
+  final String           email;
+  final List<CuentaInfo> cuentas;
+
+  const LoginResponse({
+    required this.token,
+    required this.nombre,
+    required this.apellido,
+    required this.email,
+    required this.cuentas,
+  });
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    final cuentasJson = json['cuentas'] as List<dynamic>? ?? [];
+    return LoginResponse(
+      token:    json['token']    as String,
+      nombre:   json['nombre']   as String? ?? '',
+      apellido: json['apellido'] as String? ?? '',
+      email:    json['email']    as String? ?? '',
+      cuentas:  cuentasJson.map((c) => CuentaInfo.fromJson(c)).toList(),
+    );
+  }
+}
+
+// ── Request de transferencia ───────────────────────────────────────────────
 class TransferenciaRequest {
+  final int    cuentaOrigenId;
   final String cuentaDestino;
   final double monto;
   final String concepto;
 
   const TransferenciaRequest({
+    required this.cuentaOrigenId,
     required this.cuentaDestino,
     required this.monto,
     required this.concepto,
   });
 
   Map<String, dynamic> toJson() => {
-    'cuentaDestino': cuentaDestino,
-    'monto':         monto,
-    'concepto':      concepto,
+    'cuentaOrigenId': cuentaOrigenId,
+    'cuentaDestino':  cuentaDestino,
+    'monto':          monto,
+    'concepto':       concepto,
   };
 }
 
+// ── Respuesta de transferencia ─────────────────────────────────────────────
 class TransferenciaResponse {
-  final bool    exito;
-  final String  referencia;
-  final String  mensaje;
+  final bool   exito;
+  final String referencia;
+  final String mensaje;
 
   const TransferenciaResponse({
     required this.exito,
@@ -74,6 +99,7 @@ class TransferenciaResponse {
   }
 }
 
+// ── Movimiento del historial ───────────────────────────────────────────────
 class Movimiento {
   final String referencia;
   final String cuentaDestino;

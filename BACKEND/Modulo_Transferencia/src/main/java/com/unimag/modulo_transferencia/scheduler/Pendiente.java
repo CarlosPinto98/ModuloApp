@@ -2,10 +2,8 @@ package com.unimag.modulo_transferencia.scheduler;
 
 import com.unimag.modulo_transferencia.entity.Cuenta;
 import com.unimag.modulo_transferencia.entity.Movimiento;
-import com.unimag.modulo_transferencia.entity.Usuario;
 import com.unimag.modulo_transferencia.repository.CuentaRepository;
 import com.unimag.modulo_transferencia.repository.MovimientoRepository;
-import com.unimag.modulo_transferencia.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,7 +19,6 @@ import java.util.List;
 public class Pendiente {
 
     private final MovimientoRepository movimientoRepository;
-    private final UsuarioRepository    usuarioRepository;
     private final CuentaRepository     cuentaRepository;
 
     @Scheduled(fixedDelay = 60000)
@@ -54,12 +51,7 @@ public class Pendiente {
 
             } else {
                 // Devolver saldo al origen y marcar FALLIDO
-                Usuario origen = mov.getUsuarioOrigen();
-                Cuenta cuentaOrigen = cuentaRepository.findByUsuario(origen)
-                        .orElseThrow(() -> new RuntimeException(
-                                "Cuenta de origen no encontrada para movimiento: "
-                                        + mov.getReferencia()));
-
+                Cuenta cuentaOrigen = mov.getCuentaOrigen();
                 cuentaOrigen.setSaldo(cuentaOrigen.getSaldo() + mov.getMonto());
                 cuentaRepository.save(cuentaOrigen);
 

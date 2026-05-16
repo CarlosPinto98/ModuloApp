@@ -34,33 +34,44 @@ public class ApiController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
-    // ── Obtener cuenta del usuario autenticado ────────────────────────────
-    private Cuenta getCuenta(Usuario usuario) {
-        return cuentaRepository.findByUsuario(usuario)
+    // ── Obtener cuenta del usuario por cuentaId (valida pertenencia) ──────
+    private Cuenta getCuentaById(Usuario usuario, Long cuentaId) {
+        Cuenta cuenta = cuentaRepository.findById(cuentaId)
                 .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+        if (!cuenta.getUsuario().getId().equals(usuario.getId()))
+            throw new RuntimeException("La cuenta no pertenece al usuario");
+        return cuenta;
     }
 
     // ── PERFIL ────────────────────────────────────────────────────────────
     @GetMapping("/usuario/perfil")
     public ResponseEntity<Map<String, Object>> perfil(Authentication auth) {
         Usuario u = getUsuario(auth);
-        Cuenta  c = getCuenta(u);
+        java.util.List<Cuenta> cuentas = cuentaRepository.findAllByUsuario(u);
         Map<String, Object> resp = new HashMap<>();
-        resp.put("numeroCuenta", c.getNumeroCuenta());
-        resp.put("nombre",       u.getNombre());
-        resp.put("apellido",     u.getApellido());
-        resp.put("email",        u.getEmail());
-        resp.put("saldo",        c.getSaldo());
+        resp.put("nombre",   u.getNombre());
+        resp.put("apellido", u.getApellido());
+        resp.put("email",    u.getEmail());
+        resp.put("cuentas",  cuentas.stream().map(c -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id",           c.getId());
+            m.put("numeroCuenta", c.getNumeroCuenta());
+            m.put("saldo",        c.getSaldo());
+            return m;
+        }).collect(Collectors.toList()));
         return ResponseEntity.ok(resp);
     }
 
-    // ── SALDO ─────────────────────────────────────────────────────────────
+    // ── SALDO de cuenta específica ────────────────────────────────────────
     @GetMapping("/usuario/saldo")
-    public ResponseEntity<Map<String, Object>> saldo(Authentication auth) {
+    public ResponseEntity<Map<String, Object>> saldo(
+            @RequestParam Long cuentaId,
+            Authentication auth) {
         Usuario u = getUsuario(auth);
-        Cuenta  c = getCuenta(u);
+        Cuenta  c = getCuentaById(u, cuentaId);
         Map<String, Object> resp = new HashMap<>();
-        resp.put("saldo", c.getSaldo());
+        resp.put("cuentaId", c.getId());
+        resp.put("saldo",    c.getSaldo());
         return ResponseEntity.ok(resp);
     }
 
@@ -69,9 +80,10 @@ public class ApiController {
     public ResponseEntity<Map<String, Object>> transferir(
             @RequestBody TransferenciaRequest req,
             Authentication auth) {
-        Usuario origen = getUsuario(auth);
+        Usuario origen      = getUsuario(auth);
+        Cuenta  cuentaOrigen = getCuentaById(origen, req.getCuentaOrigenId());
         Map<String, Object> resultado = transferenciaService.realizarTransferencia(
-                origen, req.getCuentaDestino(), req.getMonto(), req.getConcepto());
+                cuentaOrigen, req.getCuentaDestino(), req.getMonto(), req.getConcepto());
         return ResponseEntity.ok(resultado);
     }
 
@@ -80,26 +92,31 @@ public class ApiController {
     public ResponseEntity<Map<String, Object>> recargar(
             @RequestBody RecargaRequest req,
             Authentication auth) {
-        Usuario usuario = getUsuario(auth);
+        Usuario usuario      = getUsuario(auth);
+        Cuenta  cuentaOrigen = getCuentaById(usuario, req.getCuentaOrigenId());
         Map<String, Object> resultado = transferenciaService.realizarRecarga(
-                usuario, req.getMonto(), req.getMetodoPago(), req.getCuentaDestino());
+                cuentaOrigen, req.getMonto(), req.getMetodoPago(), req.getCuentaDestino());
         return ResponseEntity.ok(resultado);
     }
 
-    // ── HISTORIAL COMPLETO ────────────────────────────────────────────────
+    // ── HISTORIAL de cuenta específica ────────────────────────────────────
     @GetMapping("/transferencias/historial")
-    public ResponseEntity<List<Map<String, Object>>> historial(Authentication auth) {
+    public ResponseEntity<List<Map<String, Object>>> historial(
+            @RequestParam Long cuentaId,
+            Authentication auth) {
         Usuario usuario = getUsuario(auth);
-        List<Movimiento> movimientos = transferenciaService.obtenerTodos(usuario);
-        return ResponseEntity.ok(mapearMovimientos(movimientos));
+        Cuenta  cuenta  = getCuentaById(usuario, cuentaId);
+        return ResponseEntity.ok(mapearMovimientos(transferenciaService.obtenerTodos(cuenta)));
     }
 
-    // ── HISTORIAL DE HOY ──────────────────────────────────────────────────
+    // ── HISTORIAL DE HOY de cuenta específica ─────────────────────────────
     @GetMapping("/transferencias/historial/hoy")
-    public ResponseEntity<List<Map<String, Object>>> historialHoy(Authentication auth) {
+    public ResponseEntity<List<Map<String, Object>>> historialHoy(
+            @RequestParam Long cuentaId,
+            Authentication auth) {
         Usuario usuario = getUsuario(auth);
-        List<Movimiento> movimientos = transferenciaService.obtenerDeHoy(usuario);
-        return ResponseEntity.ok(mapearMovimientos(movimientos));
+        Cuenta  cuenta  = getCuentaById(usuario, cuentaId);
+        return ResponseEntity.ok(mapearMovimientos(transferenciaService.obtenerDeHoy(cuenta)));
     }
 
     // ── Mapea movimientos a formato que espera Flutter ────────────────────

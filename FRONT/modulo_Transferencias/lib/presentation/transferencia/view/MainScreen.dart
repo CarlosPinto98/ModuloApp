@@ -57,11 +57,13 @@ class MainScreenState extends State<MainScreen>
       }
       final loginData = await TransferenciaService.loginConTokenExterno();
       if (loginData != null) {
-        SaldoService.instancia.setSaldo(loginData.saldo);
-        TokenStore.nombre        = loginData.nombre;
-        TokenStore.apellido      = loginData.apellido;
-        TokenStore.email         = loginData.email;
-        TokenStore.numeroCuenta  = loginData.numeroCuenta;
+        TokenStore.nombre   = loginData.nombre;
+        TokenStore.apellido = loginData.apellido;
+        TokenStore.email    = loginData.email;
+        TokenStore.setCuentas(loginData.cuentas);
+        // Saldo de la cuenta activa
+        final saldoActivo = TokenStore.cuentaActiva?.saldo ?? 0.0;
+        SaldoService.instancia.setSaldo(saldoActivo);
         setState(() {});
       } else {
         SaldoService.instancia.sincronizarConBackend();

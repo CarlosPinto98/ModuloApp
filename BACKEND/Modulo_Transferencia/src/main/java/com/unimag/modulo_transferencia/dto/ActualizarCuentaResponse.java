@@ -1,10 +1,5 @@
 package com.unimag.modulo_transferencia.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-
-@Getter
-@Setter
 public class ActualizarCuentaResponse {
     private boolean exito;
     private String  mensaje;
@@ -16,4 +11,7 @@ public class ActualizarCuentaResponse {
         this.numeroCuenta = numeroCuenta;
     }
 
+    public boolean isExito()        { return exito; }
+    public String  getMensaje()     { return mensaje; }
+    public String  getNumeroCuenta(){ return numeroCuenta; }
 }

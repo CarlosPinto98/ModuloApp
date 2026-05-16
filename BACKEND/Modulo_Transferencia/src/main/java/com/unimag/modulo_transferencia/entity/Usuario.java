@@ -46,7 +46,7 @@ public class Usuario {
     @Builder.Default
     private LocalDateTime creadoEn = LocalDateTime.now();
 
-    // ── Relación con Cuenta ───────────────────────────────────────────────
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Cuenta cuenta;
+    // ── Relación con Cuentas ──────────────────────────────────────────────
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private java.util.List<Cuenta> cuentas;
 }

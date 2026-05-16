@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../service/SaldoService.dart';
+import '../service/TokenStore.dart';
+import '../model/TransferenciaModels.dart';
 
 class Recarga extends StatefulWidget {
   final String miCuenta;
@@ -28,8 +30,8 @@ class RecargaState extends State<Recarga> {
   String montoFmt  = '';
   String metodo    = 'Tarjeta de crédito';
   bool   isLoading = false;
-  // true = recarga propia | false = recarga a otro
   bool   esPropia  = true;
+  CuentaInfo? cuentaOrigen;
 
   final List<Map<String, dynamic>> metodos = [
     {'label': 'Tarjeta de crédito', 'icon': Icons.credit_card_rounded},
@@ -83,6 +85,12 @@ class RecargaState extends State<Recarga> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    cuentaOrigen = TokenStore.cuentaActiva;
+  }
+
+  @override
   void dispose() { montoCtrl.dispose(); cuentaCtrl.dispose(); super.dispose(); }
 
   @override
@@ -123,6 +131,55 @@ class RecargaState extends State<Recarga> {
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                     ]),
                     const SizedBox(height: 16),
+
+                    // ── Selector cuenta origen (si tiene más de 1) ──────
+                    if (TokenStore.cuentas.length > 1) ...[
+                      Text('Cuenta origen',
+                          style: TextStyle(color: Colors.white.withOpacity(0.5),
+                              fontSize: 12, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.white.withOpacity(0.05),
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<CuentaInfo>(
+                            value: cuentaOrigen,
+                            isExpanded: true,
+                            dropdownColor: const Color(0xFF1A1A24),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            borderRadius: BorderRadius.circular(12),
+                            icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54),
+                            items: TokenStore.cuentas.map((c) => DropdownMenuItem(
+                              value: c,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(c.numeroCuenta,
+                                      style: const TextStyle(color: Colors.white,
+                                          fontSize: 14, fontWeight: FontWeight.w600)),
+                                  Text('Saldo: \$${c.saldo.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+                                      style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+                                ],
+                              ),
+                            )).toList(),
+                            onChanged: (c) {
+                              if (c != null) {
+                                setState(() {
+                                  cuentaOrigen = c;
+                                  TokenStore.setcuentaActiva(c);
+                                  SaldoService.instancia.setSaldo(c.saldo);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     // ── Selector: Cuenta propia / A otro ───────────────
                     Container(

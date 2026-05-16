@@ -10,8 +10,11 @@ import java.util.Optional;
 @Repository
 public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
 
-    // Buscar cuenta por usuario
-    Optional<Cuenta> findByUsuario(Usuario usuario);
+    // Todas las cuentas de un usuario
+    java.util.List<Cuenta> findAllByUsuario(Usuario usuario);
+
+    // Cantidad de cuentas del usuario (para validar límite de 3)
+    long countByUsuario(Usuario usuario);
 
     // Buscar cuenta por número de cuenta
     Optional<Cuenta> findByNumeroCuenta(String numeroCuenta);

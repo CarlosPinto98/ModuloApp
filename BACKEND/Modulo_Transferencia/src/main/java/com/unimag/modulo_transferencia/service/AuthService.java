@@ -28,28 +28,36 @@ public class AuthService {
     private static final String URL_VALIDAR_TOKEN =
             "https://mriai.coreunimag.com/api/auth/validate-token";
 
+    // ── Construye LoginResponse con lista de cuentas ──────────────────────
+    private AuthDTO.LoginResponse buildResponse(Usuario usuario, String token) {
+        java.util.List<Cuenta> cuentas = cuentaRepository.findAllByUsuario(usuario);
+
+        java.util.List<AuthDTO.CuentaDTO> cuentasDTO = cuentas.stream().map(c -> {
+            AuthDTO.CuentaDTO dto = new AuthDTO.CuentaDTO();
+            dto.setId(c.getId());
+            dto.setNumeroCuenta(c.getNumeroCuenta());
+            dto.setSaldo(c.getSaldo());
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+
+        AuthDTO.LoginResponse response = new AuthDTO.LoginResponse();
+        response.setToken(token);
+        response.setNombre(usuario.getNombre());
+        response.setApellido(usuario.getApellido());
+        response.setEmail(usuario.getEmail());
+        response.setCuentas(cuentasDTO);
+        return response;
+    }
+
     // ── LOGIN ─────────────────────────────────────────────────────────────
     public AuthDTO.LoginResponse login(AuthDTO.LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
-
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        Cuenta cuenta = cuentaRepository.findByUsuario(usuario)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
-
         String token = jwtService.generarToken(usuario.getEmail());
-
-        AuthDTO.LoginResponse response = new AuthDTO.LoginResponse();
-        response.setToken(token);
-        response.setNumeroCuenta(cuenta.getNumeroCuenta());
-        response.setNombre(usuario.getNombre());
-        response.setApellido(usuario.getApellido());
-        response.setEmail(usuario.getEmail());
-        response.setSaldo(cuenta.getSaldo());
-        return response;
+        return buildResponse(usuario, token);
     }
 
     // ── REGISTRO ──────────────────────────────────────────────────────────
@@ -58,14 +66,12 @@ public class AuthService {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("El email ya está registrado");
         }
-
         Usuario usuario = Usuario.builder()
                 .nombre(request.getNombre())
                 .apellido(request.getApellido())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
-
         usuarioRepository.save(usuario);
 
         Cuenta cuenta = Cuenta.builder()
@@ -73,19 +79,10 @@ public class AuthService {
                 .numeroCuenta(generarNumeroCuenta())
                 .saldo(0.0)
                 .build();
-
         cuentaRepository.save(cuenta);
 
         String token = jwtService.generarToken(usuario.getEmail());
-
-        AuthDTO.LoginResponse response = new AuthDTO.LoginResponse();
-        response.setToken(token);
-        response.setNumeroCuenta(cuenta.getNumeroCuenta());
-        response.setNombre(usuario.getNombre());
-        response.setApellido(usuario.getApellido());
-        response.setEmail(usuario.getEmail());
-        response.setSaldo(cuenta.getSaldo());
-        return response;
+        return buildResponse(usuario, token);
     }
 
     // ── LOGIN CON TOKEN EXTERNO ───────────────────────────────────────────
@@ -93,9 +90,7 @@ public class AuthService {
     public AuthDTO.LoginResponse loginConTokenExterno(String tokenApp) {
         try {
             String[] partes = tokenApp.split("\\.");
-            if (partes.length < 2) {
-                throw new RuntimeException("Token externo inválido");
-            }
+            if (partes.length < 2) throw new RuntimeException("Token externo inválido");
 
             String payloadBase64 = partes[1];
             int mod = payloadBase64.length() % 4;
@@ -111,54 +106,41 @@ public class AuthService {
             if (sub == null || sub.isBlank()) {
                 throw new RuntimeException("No se pudo extraer el identificador del token");
             }
-
             if (payload.has("exp")) {
                 long exp     = payload.get("exp").asLong();
                 long ahoraMs = System.currentTimeMillis() / 1000;
-                if (ahoraMs > exp) {
-                    throw new RuntimeException("El tokenApp ha expirado");
-                }
+                if (ahoraMs > exp) throw new RuntimeException("El tokenApp ha expirado");
             }
 
             String nombre   = payload.has("nombres")   ? payload.get("nombres").asText()   : "Usuario";
             String apellido = payload.has("apellidos")  ? payload.get("apellidos").asText()  : "App";
 
-            // ── Buscar o crear usuario ────────────────────────────────────
+            // Buscar o crear usuario
             Usuario usuario = usuarioRepository.findByEmail(sub).orElseGet(() -> {
                 Usuario nuevo = Usuario.builder()
-                        .nombre(nombre)
-                        .apellido(apellido)
-                        .email(sub)
+                        .nombre(nombre).apellido(apellido).email(sub)
                         .password(passwordEncoder.encode(tokenApp.substring(0, 20)))
                         .build();
                 return usuarioRepository.save(nuevo);
             });
 
-            // ── Buscar o crear cuenta ─────────────────────────────────────
-            Cuenta cuenta = cuentaRepository.findByUsuario(usuario).orElseGet(() -> {
+            // Si no tiene ninguna cuenta, crear la primera
+            if (cuentaRepository.countByUsuario(usuario) == 0) {
                 Cuenta nueva = Cuenta.builder()
                         .usuario(usuario)
                         .numeroCuenta(generarNumeroCuenta())
                         .saldo(50000.0)
                         .build();
-                return cuentaRepository.save(nueva);
-            });
+                cuentaRepository.save(nueva);
+            }
 
-            // ── Actualizar nombre y apellido si cambiaron ─────────────────
+            // Actualizar nombre y apellido si cambiaron
             usuario.setNombre(nombre);
             usuario.setApellido(apellido);
             usuarioRepository.save(usuario);
 
             String jwtPropio = jwtService.generarToken(usuario.getEmail());
-
-            AuthDTO.LoginResponse response = new AuthDTO.LoginResponse();
-            response.setToken(jwtPropio);
-            response.setNumeroCuenta(cuenta.getNumeroCuenta());
-            response.setNombre(usuario.getNombre());
-            response.setApellido(usuario.getApellido());
-            response.setEmail(usuario.getEmail());
-            response.setSaldo(cuenta.getSaldo());
-            return response;
+            return buildResponse(usuario, jwtPropio);
 
         } catch (RuntimeException e) {
             throw e;

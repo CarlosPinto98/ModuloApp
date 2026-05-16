@@ -35,13 +35,19 @@ public class AuthDTO {
     }
 
     @Data
-    public static class LoginResponse {
-        private String token;
+    public static class CuentaDTO {
+        private Long   id;
         private String numeroCuenta;
-        private String nombre;
-        private String apellido;
-        private String email;
         private Double saldo;
+    }
+
+    @Data
+    public static class LoginResponse {
+        private String           token;
+        private String           nombre;
+        private String           apellido;
+        private String           email;
+        private java.util.List<CuentaDTO> cuentas;
     }
 
     // ── NUEVO: Request para login con token externo ───────────────────────

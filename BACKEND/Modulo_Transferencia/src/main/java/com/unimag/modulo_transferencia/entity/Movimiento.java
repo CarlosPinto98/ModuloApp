@@ -23,8 +23,8 @@ public class Movimiento {
     private String referencia;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_origen_id", nullable = false)
-    private Usuario usuarioOrigen;
+    @JoinColumn(name = "cuenta_origen_id", nullable = false)
+    private Cuenta cuentaOrigen;
 
     @Column(nullable = false, length = 20)
     private String cuentaDestino;

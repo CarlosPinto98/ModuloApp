@@ -9,6 +9,7 @@ import '../model/TransferenciaModels.dart';
 import '../service/HistorialService.dart';
 import '../service/TransferenciaService.dart';
 import '../service/SaldoService.dart';
+import '../service/TokenStore.dart';
 import '../model/MovimientoItem.dart';
 import '../widgets/Resultado.dart';
 import '../widgets/MilesFormatter.dart';
@@ -28,6 +29,7 @@ class TransferenciaScreenState extends State<TransferenciaScreen> {
   final formKey      = GlobalKey<FormState>();
 
   bool enviando = false;
+  CuentaInfo? get cuentaOrigen => TokenStore.cuentaActiva;
 
   // ── Montos rápidos ────────────────────────────────────────────────────
   final List<int> montosRapidos = [10000, 20000, 50000, 100000, 200000, 500000];
@@ -61,6 +63,11 @@ class TransferenciaScreenState extends State<TransferenciaScreen> {
   Future<void> enviarTransferencia() async {
     if (!formKey.currentState!.validate()) return;
 
+    if (cuentaOrigen == null) {
+      mostrarSnack('No hay cuenta activa seleccionada', error: true);
+      return;
+    }
+
     final montoVal = double.tryParse(montoCtrl.text.replaceAll('.', ''));
     if (montoVal == null || montoVal <= 0) {
       mostrarSnack('Monto inválido', error: true);
@@ -78,9 +85,10 @@ class TransferenciaScreenState extends State<TransferenciaScreen> {
     setState(() => enviando = true);
 
     final request = TransferenciaRequest(
-      cuentaDestino: cuentaCtrl.text.trim(),
-      monto:         montoVal,
-      concepto:      conceptoCtrl.text.trim().isEmpty
+      cuentaOrigenId: cuentaOrigen!.id,
+      cuentaDestino:  cuentaCtrl.text.trim(),
+      monto:          montoVal,
+      concepto:       conceptoCtrl.text.trim().isEmpty
           ? 'Transferencia'
           : conceptoCtrl.text.trim(),
     );
@@ -106,7 +114,6 @@ class TransferenciaScreenState extends State<TransferenciaScreen> {
           esHoy:  true,
         ),
       );
-
       mostrarResultado(exito: true, mensaje: response.mensaje, referencia: response.referencia);
       cuentaCtrl.clear();
       montoCtrl.clear();
@@ -166,6 +173,52 @@ class TransferenciaScreenState extends State<TransferenciaScreen> {
         child: Form(
           key: formKey,
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+
+            // ── Selector cuenta origen ──────────────────────────────────
+            if (TokenStore.cuentas.length > 1) ...[
+              label('Cuenta origen'),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withOpacity(0.06),
+                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<CuentaInfo>(
+                    value: cuentaOrigen,
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF1A1A24),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    borderRadius: BorderRadius.circular(14),
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white54),
+                    items: TokenStore.cuentas.map((c) => DropdownMenuItem(
+                      value: c,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(c.numeroCuenta,
+                              style: const TextStyle(color: Colors.white,
+                                  fontSize: 14, fontWeight: FontWeight.w600)),
+                          Text('Saldo: \$${c.saldo.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+                              style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12)),
+                        ],
+                      ),
+                    )).toList(),
+                    onChanged: (c) {
+                      if (c != null) {
+                        setState(() {
+                          TokenStore.setcuentaActiva(c);
+                          SaldoService.instancia.setSaldo(c.saldo);
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
 
             // ── Cuenta destino ──────────────────────────────────────────
             label('Cuenta destino'),

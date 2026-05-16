@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../service/SaldoService.dart';
 import '../service/HistorialService.dart';
 import '../service/TransferenciaService.dart';
+import '../service/TokenStore.dart';
 import '../model/MovimientoItem.dart';
 import 'Recarga.dart';
 
@@ -22,8 +23,7 @@ class HomeContentState extends State<HomeContent> {
   bool saldoVisible = true;
   double get saldo => SaldoService.instancia.saldo;
 
-  // TODO: reemplazar con el número de cuenta real que venga del backend (módulo Auth)
-  final String miCuenta = '0012345678';
+  String get miCuenta => TokenStore.cuentaActiva?.numeroCuenta ?? '';
 
   final List<Map<String, dynamic>> cards = [
     {
